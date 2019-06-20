@@ -102,3 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# cpp
+cpp/*
+!cpp/*.c
+!cpp/*.cpp
+!cpp/Makefile
