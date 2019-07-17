@@ -55,7 +55,7 @@ def test1():
     pos = (0, 2)
     count = 0
     while not is_done(board):
-        move = main.next_move(board)
+        move = main.next_move(pos, board)
         new_pos = update_pos(pos, move)
         if not is_valid(new_pos, board):
             print(f"Board: {board} tried to move {move} from {pos}")
