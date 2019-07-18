@@ -58,48 +58,28 @@ def dist(pos1, pos2):
 
 
 def get_directions(pos1, pos2):
-    return (pos2[0] - pos1[0], pos2[1] - pos1[1])
+    directions = (pos2[0] - pos1[0], pos2[1] - pos1[1])
+    return directions
 
 
-def toward_closest(pos, board):
-    if "b" not in board:
-        return "CLEAN"
-    dirt = np.argwhere(board == "d")
-    dirt = [tuple(pos) for pos in dirt]
-    bot = np.argwhere(board == "b")[0]
-    closest = None
-    for pos in dirt:
-        if not closest or dist(bot, pos) < closest[0]:
-            closest = [dist(bot, pos), pos]
-
-
-def random_walk(pos, board):
-    moves = {
-        "RIGHT": np.array((0, 1)),
-        "UP": np.array((-1, 0)),
-        "LEFT": np.array((0, -1)),
-        "DOWN": np.array((1, 0)),
-    }
-    dirs = ["UP", "LEFT", "DOWN", "RIGHT"]
-    if "b" not in board:
-        return "CLEAN"
-    new_pos = (-1, -1)
-    while not is_valid(new_pos, board):
-        dir = dirs[random.randint(0, 3)]
-        new_pos = tuple(pos + moves[dir])
+def get_direction(pos1, pos2):
+    dir = (pos2[0] - pos1[0], pos2[1] - pos1[1])
+    dir = (int(dir[0]/abs(dir[0])), 0) if abs(dir[0]) > abs(dir[1]) else \
+        (0, int(dir[1]/abs(dir[1])))
     return dir
 
 
-def next_move(pos, board):
-    board = np.array(board)
-    toward_closest(pos, board)
-    return 0
-    dirt = np.argwhere(board == "d")
-    bot = np.argwhere(board == "b")
-    positions = np.concatenate((bot, dirt))
-    positions = [tuple(pos) for pos in positions]
-    nodes = [Node(pos) for pos in positions]
-
+# def next_move(pos, board):
+#     board = np.array(board)
+#     # return toward_closest(pos, board)
+#     return random_walk(pos, board)
+# return 0
+# dirt = np.argwhere(board == "d")
+# bot = np.argwhere(board == "b")
+# positions = np.concatenate((bot, dirt))
+# positions = [tuple(pos) for pos in positions]
+# nodes = [Node(pos) for pos in positions]
 
 if __name__ == "__main__":
-    next_move((0, 2), [["-", "d", "b"], ["-", "d", "-"], ["d", "-", "d"]])
+    print(0)
+    # next_move((0, 2), [["-", "d", "b"], ["-", "d", "-"], ["d", "-", "d"]])

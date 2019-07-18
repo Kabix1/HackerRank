@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
-import main
+# import main
 import numpy as np
 import sys
+import random
+import Strategies
 
 MOVES = {
     "RIGHT": np.array((0, 1)),
@@ -49,19 +51,40 @@ def update_board(old_pos, new_pos, board):
         board[new_pos] = BOT
 
 
-def test1():
-    board = np.array([[DIRT, EMPTY, BOT], [EMPTY, EMPTY, DIRT],
-                      [DIRT, DIRT, EMPTY]])
-    pos = (0, 2)
+def generate_board():
+    num_cells = 9
+    board_num = [random.randint(0, 1) for _ in range(num_cells)]
+    board = [DIRT if n else EMPTY for n in board_num]
+    board = np.array(board).reshape((3, 3))
+    bot_pos = tuple(np.random.randint(0, 3, size=(2)))
+    if board[bot_pos] == EMPTY:
+        board[bot_pos] = BOT
+    return (bot_pos, board)
+
+
+def test_all():
+    modules = [module for module in dir(Strategies) if "__" not in module]
+    modules = [getattr(Strategies, module) for module in modules]
+    strats = [module for module in modules if hasattr(module, "next_move")]
+    for strat in strats:
+        try_strategy(strat)
+
+
+def try_strategy(strat):
+    num_tries = 25
     count = 0
-    while not is_done(board):
-        move = main.next_move(pos, board)
-        new_pos = update_pos(pos, move)
-        if not is_valid(new_pos, board):
-            print(f"Board: {board} tried to move {move} from {pos}")
-            sys.exit(1)
-        update_board(pos, new_pos, board)
-        pos = new_pos
-        count += 1
-        assert count < 500
-    print(f"Success! Did it in {count} moves")
+    for _ in range(num_tries):
+        pos, board = generate_board()
+        while not is_done(board):
+            move = strat.next_move(pos, board)
+            new_pos = update_pos(pos, move)
+            if not is_valid(new_pos, board):
+                print(
+                    f"Board: {board} tried to move {move} from {pos} [{strat.__name__}]"
+                )
+                sys.exit(1)
+            update_board(pos, new_pos, board)
+            pos = new_pos
+            count += 1
+            assert count < 5000
+    print(f"Success! Did it in {count/num_tries} moves [{strat.__name__}]")
