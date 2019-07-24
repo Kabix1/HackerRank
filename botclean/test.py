@@ -52,11 +52,11 @@ def update_board(old_pos, new_pos, board):
 
 
 def generate_board():
-    num_cells = 9
+    num_cells = 25
     board_num = [random.randint(0, 1) for _ in range(num_cells)]
     board = [DIRT if n else EMPTY for n in board_num]
-    board = np.array(board).reshape((3, 3))
-    bot_pos = tuple(np.random.randint(0, 3, size=(2)))
+    board = np.array(board).reshape((5, 5))
+    bot_pos = tuple(np.random.randint(0, 5, size=(2)))
     if board[bot_pos] == EMPTY:
         board[bot_pos] = BOT
     return (bot_pos, board)
@@ -76,7 +76,7 @@ def try_strategy(strat):
     for _ in range(num_tries):
         pos, board = generate_board()
         while not is_done(board):
-            move = strat.next_move(pos, board)
+            move = strat.next_move(pos, board.tolist())
             new_pos = update_pos(pos, move)
             if not is_valid(new_pos, board):
                 print(

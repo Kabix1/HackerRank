@@ -16,21 +16,6 @@
 import random
 import numpy as np
 
-ROUTE = []
-
-
-class Node:
-    def __init__(self, pos):
-        self.neighbours = []
-        self.pos = pos
-
-    def calc_dist(self, pos):
-        return abs(pos[0] - self.pos[0]) + abs(pos[1] - self.pos[1])
-
-    def add_neighbour(self, cell):
-        dist = self.calc_dist(cell.pos)
-        self.neighbours.append({"cell": cell, "dist": dist})
-
 
 def is_valid(pos, board):
     try:
