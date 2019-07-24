@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import random
 import Strategies
+import pprint
 
 MOVES = {
     "RIGHT": np.array((0, 1)),
@@ -17,6 +18,8 @@ MOVES = {
 BOT = "b"
 EMPTY = "-"
 DIRT = "d"
+
+SHAPE = (9, 30)
 
 
 def is_done(board):
@@ -52,11 +55,10 @@ def update_board(old_pos, new_pos, board):
 
 
 def generate_board():
-    num_cells = 25
-    board_num = [random.randint(0, 1) for _ in range(num_cells)]
-    board = [DIRT if n else EMPTY for n in board_num]
-    board = np.array(board).reshape((5, 5))
-    bot_pos = tuple(np.random.randint(0, 5, size=(2)))
+    # board = np.random.choice([EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, DIRT],
+    board = np.random.choice([EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, DIRT],
+                             size=SHAPE)
+    bot_pos = tuple(np.random.randint(0, min(SHAPE), size=(2)))
     if board[bot_pos] == EMPTY:
         board[bot_pos] = BOT
     return (bot_pos, board)
@@ -66,25 +68,52 @@ def test_all():
     modules = [module for module in dir(Strategies) if "__" not in module]
     modules = [getattr(Strategies, module) for module in modules]
     strats = [module for module in modules if hasattr(module, "next_move")]
-    for strat in strats:
-        try_strategy(strat)
-
-
-def try_strategy(strat):
-    num_tries = 25
-    count = 0
+    num_tries = 1000
+    num_moves = {strat.__name__: [] for strat in strats}
     for _ in range(num_tries):
         pos, board = generate_board()
-        while not is_done(board):
-            move = strat.next_move(pos, board.tolist())
-            new_pos = update_pos(pos, move)
-            if not is_valid(new_pos, board):
-                print(
-                    f"Board: {board} tried to move {move} from {pos} [{strat.__name__}]"
-                )
-                sys.exit(1)
-            update_board(pos, new_pos, board)
-            pos = new_pos
-            count += 1
-            assert count < 5000
-    print(f"Success! Did it in {count/num_tries} moves [{strat.__name__}]")
+        diff = 0
+        for strat in strats:
+            num_moves[strat.__name__].append(try_strategy(strat, pos, board))
+            if not diff:
+                diff = num_moves[strat.__name__][-1]
+            else:
+                diff -= num_moves[strat.__name__][-1]
+                if diff >= 35:
+                    print(board)
+    width = max([len(name) for name in num_moves.keys()])
+    mov = list(num_moves.values())
+    diffs = [mov[1][i] - mov[0][i] for i in range(num_tries)]
+    avg = sum(diffs) / num_tries
+    std = (sum(map(lambda x: (x - avg)**2, diffs)) / num_tries)**0.5
+    diffs.sort()
+    print(diffs)
+    print(f"diffs{' ':<{width-5}}  {avg} +- {std/(num_tries**0.5):.3}")
+    for strat, moves in num_moves.items():
+        avg = sum(moves) / num_tries
+        std = (sum(map(lambda x: (x - avg)**2, moves)) / num_tries)**0.5
+        print(f"{strat:<{width}}  {avg} +- {std/(num_tries**0.5):.3}")
+
+
+def try_strategy(strat, orig_pos, orig_board):
+    count = 0
+    board = np.array(orig_board)
+    pos = tuple(orig_pos)
+    while not is_done(board):
+        # print("#" * len(board[0]))
+        # for row in board:
+        #     print("".join(row))
+        # print("#" * len(board[0]))
+        move = strat.next_move(pos, board.tolist())
+        new_pos = update_pos(pos, move)
+        if not is_valid(new_pos, board):
+            print(
+                f"Board: {board} tried to move {move} from {pos} [{strat.__name__}]"
+            )
+            sys.exit(1)
+        update_board(pos, new_pos, board)
+        pos = new_pos
+        count += 1
+        assert count < 5000
+    return count
+    # print(f"Success! Did it in {count} moves [{strat.__name__}]")
