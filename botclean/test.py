@@ -15,8 +15,8 @@ MOVES = {
     "CLEAN": np.array((0, 0))
 }
 
-BOT = "b"
-EMPTY = "-"
+BOT = "@"
+EMPTY = "."
 DIRT = "d"
 
 SHAPE = (9, 30)
@@ -68,26 +68,36 @@ def test_all():
     modules = [module for module in dir(Strategies) if "__" not in module]
     modules = [getattr(Strategies, module) for module in modules]
     strats = [module for module in modules if hasattr(module, "next_move")]
-    num_tries = 1000
+    num_tries = 500
     num_moves = {strat.__name__: [] for strat in strats}
+    biggest_diff = 0
+    saved_board = []
     for _ in range(num_tries):
+        mov = list(num_moves.values())
         pos, board = generate_board()
-        diff = 0
         for strat in strats:
             num_moves[strat.__name__].append(try_strategy(strat, pos, board))
-            if not diff:
-                diff = num_moves[strat.__name__][-1]
-            else:
-                diff -= num_moves[strat.__name__][-1]
-                if diff >= 35:
-                    print(board)
+        if mov[0][-1] - mov[1][-1] < biggest_diff:
+            biggest_diff = mov[0][-1] - mov[1][-1]
+            saved_board = [pos, board]
+    replayed_games = []
+    for strat in strats:
+        replayed_games.append(
+            try_strategy(strat, saved_board[0], saved_board[1], debug=True))
+    for g in range(min(len(replayed_games[0]), len(replayed_games[1]))):
+        print("#" * (SHAPE[1] * 2 + 5))
+        for r in range(SHAPE[0]):
+            row1 = "".join(replayed_games[0][g][r])
+            row2 = "".join(replayed_games[1][g][r])
+            print(f"#{row1}# #{row2}#")
+        print("#" * (SHAPE[1] * 2 + 5))
+    print(f"Diff in this game was {biggest_diff}!")
     width = max([len(name) for name in num_moves.keys()])
     mov = list(num_moves.values())
     diffs = [mov[1][i] - mov[0][i] for i in range(num_tries)]
     avg = sum(diffs) / num_tries
     std = (sum(map(lambda x: (x - avg)**2, diffs)) / num_tries)**0.5
     diffs.sort()
-    print(diffs)
     print(f"diffs{' ':<{width-5}}  {avg} +- {std/(num_tries**0.5):.3}")
     for strat, moves in num_moves.items():
         avg = sum(moves) / num_tries
@@ -95,15 +105,14 @@ def test_all():
         print(f"{strat:<{width}}  {avg} +- {std/(num_tries**0.5):.3}")
 
 
-def try_strategy(strat, orig_pos, orig_board):
+def try_strategy(strat, orig_pos, orig_board, debug=False):
     count = 0
     board = np.array(orig_board)
     pos = tuple(orig_pos)
+    saved_game = []
     while not is_done(board):
-        # print("#" * len(board[0]))
-        # for row in board:
-        #     print("".join(row))
-        # print("#" * len(board[0]))
+        if debug:
+            saved_game.append(np.array(board))
         move = strat.next_move(pos, board.tolist())
         new_pos = update_pos(pos, move)
         if not is_valid(new_pos, board):
@@ -115,5 +124,8 @@ def try_strategy(strat, orig_pos, orig_board):
         pos = new_pos
         count += 1
         assert count < 5000
-    return count
+    if debug:
+        return saved_game
+    else:
+        return count
     # print(f"Success! Did it in {count} moves [{strat.__name__}]")
