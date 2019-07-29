@@ -55,7 +55,7 @@ def dirt_score(dirt, board, shape):
     # return len(find_closest_dirts(dirt, board, max_distance=1))
 
 
-def next_move(pos, board):
+def next_move_(pos, board):
     # x_score = abs(dirt[0] - shape[0] // 2)
     # y_score = abs(dirt[1] - shape[1] // 2)
     # return x_score**2 + y_score**2

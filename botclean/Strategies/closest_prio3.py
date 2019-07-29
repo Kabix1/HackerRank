@@ -19,9 +19,9 @@ def is_dirt(pos, board):
     return True
 
 
-def get_dirt_at_distance(pos, board, dist):
+def get_dirt_at_distance(pos, board, n):
     dirts = []
-    start = [pos[0] + dist, pos[1]]
+    start = [pos[0] + n, pos[1]]
     curr = list(start)
     dx, dy = -1, 1
     while True:
@@ -51,33 +51,42 @@ def find_closest_dirts(pos, board, max_distance=0):
             return dirts
 
 
-def dirt_score(dirt, board, shape):
+
+def dirt_score(pos, dirt, board, shape):
+    cluster_score, pos_score = 0, 0
+    distance = dist(pos, dirt)
     adj_pos = (dirt[0] - shape[0] / 2, dirt[1] - shape[1] / 2)
+    # pos_score = abs(adj_pos[0]) + abs(adj_pos[1])
     pos_score = adj_pos[0] ** 2 + adj_pos[1] ** 2
     if not pos_score:
         pos_score = 1
     else:
         pos_score = 1 / pos_score
     close_dirt = []
-    close_dirt.extend(get_dirt_at_distance(dirt, board, 1))
-    close_dirt.extend(get_dirt_at_distance(dirt, board, 2))
-    close_dirt.extend(get_dirt_at_distance(dirt, board, 3))
-    if close_dirt:
-        return len(close_dirt) * pos_score
-    return pos_score
+    cluster_score += len(get_dirt_at_distance(dirt, board, 1))
+    cluster_score += len(get_dirt_at_distance(dirt, board, 2))
+    cluster_score += len(get_dirt_at_distance(dirt, board, 3))
+    if not cluster_score:
+        cluster_score = 1
+    # cluster_score = len(close_dirt) if len(close_dirt) else 1
+    return cluster_score ** 2 * pos_score
+
 
 
 def next_move(pos, board):
     shape = (len(board), len(board[0]))
     if board[pos[0]][pos[1]] == DIRT:
         return "CLEAN"
-    closest = find_closest_dirts(pos, board)
+    dirts = find_closest_dirts(pos, board)
+    d = dist(dirts[0], pos)
+    # dirts.extend(get_dirt_at_distance(pos, board, d + 1))
+    # dirts.extend(get_dirt_at_distance(pos, board, d + 2))
     best_dirt = None
     best_score = 0
-    for dirt in closest:
-        if not best_dirt or dirt_score(dirt, board, shape) < best_score:
+    for dirt in dirts:
+        if not best_dirt or dirt_score(pos, dirt, board, shape) < best_score:
             best_dirt = dirt
-            best_score = dirt_score(dirt, board, shape)
+            best_score = dirt_score(pos, dirt, board, shape)
 
     vector = [best_dirt[0] - pos[0], best_dirt[1] - pos[1]]
     dir = ""

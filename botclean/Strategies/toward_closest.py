@@ -41,7 +41,7 @@ def find_closest_dirt(pos, board, max_distance=0):
             curr = list(start)
 
 
-def next_move(pos, board):
+def _next_move(pos, board):
     if board[pos[0]][pos[1]] == DIRT:
         return "CLEAN"
     closest = find_closest_dirt(pos, board)

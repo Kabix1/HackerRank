@@ -64,6 +64,22 @@ def generate_board():
     return (bot_pos, board)
 
 
+# def replay_game(starting_board, strats):
+
+def print_boards(boards):
+    num_boards = len(boards)
+    hor_border = "#" * (SHAPE[1] + 2)
+    for _ in range(num_boards - 1):
+        hor_border += " " + "#" * (SHAPE[1] + 2)
+    print(hor_border)
+    for r in range(SHAPE[0]):
+        rows = []
+        for board in boards:
+            row_content = "".join(board[r])
+            rows.append("#" + row_content + "#")
+        print(" ".join(rows))
+    print(hor_border)
+
 def test_all():
     modules = [module for module in dir(Strategies) if "__" not in module]
     modules = [getattr(Strategies, module) for module in modules]
@@ -71,26 +87,32 @@ def test_all():
     num_tries = 500
     num_moves = {strat.__name__: [] for strat in strats}
     biggest_diff = 0
+    worst_score = 0
     saved_board = []
     for _ in range(num_tries):
         mov = list(num_moves.values())
         pos, board = generate_board()
         for strat in strats:
             num_moves[strat.__name__].append(try_strategy(strat, pos, board))
-        if mov[0][-1] - mov[1][-1] < biggest_diff:
-            biggest_diff = mov[0][-1] - mov[1][-1]
+        if mov[0][-1] > worst_score:
+            worst_score = mov[0][-1]
             saved_board = [pos, board]
+        # if mov[0][-1] - mov[1][-1] < biggest_diff:
+        #     biggest_diff = mov[0][-1] - mov[1][-1]
+        #     saved_board = [pos, board]
     replayed_games = []
     for strat in strats:
         replayed_games.append(
             try_strategy(strat, saved_board[0], saved_board[1], debug=True))
+
+    for strat in strats:
+        print(strat.__name__)
     for g in range(min(len(replayed_games[0]), len(replayed_games[1]))):
-        print("#" * (SHAPE[1] * 2 + 5))
-        for r in range(SHAPE[0]):
-            row1 = "".join(replayed_games[0][g][r])
-            row2 = "".join(replayed_games[1][g][r])
-            print(f"#{row1}# #{row2}#")
-        print("#" * (SHAPE[1] * 2 + 5))
+        boards = []
+        for game in replayed_games:
+            boards.append(game[g])
+        print_boards(boards)
+
     print(f"Diff in this game was {biggest_diff}!")
     width = max([len(name) for name in num_moves.keys()])
     mov = list(num_moves.values())
