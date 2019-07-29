@@ -2,6 +2,13 @@ BOT = "b"
 EMPTY = "-"
 DIRT = "d"
 
+A = 0.2455475233408131
+B = 0.15227
+C = 3.981984996122549
+D = 0
+CLUSTER_LENGTH = 3
+DISTANCES_CONSIDERED = 4
+
 
 def dist(pos1, pos2):
     return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
@@ -47,25 +54,17 @@ def find_closest_dirts(pos, board, max_distance=0):
 
 
 def dirt_score(pos, dirt, board, shape):
+    max_pos = (shape[0] / 2)**2 + (shape[1] / 2)**2
     cluster_score, pos_score = 0, 0
-    distance = dist(pos, dirt)
+    distance_score = dist(pos, dirt) / (shape[0] + shape[1])
     adj_pos = (dirt[0] - shape[0] / 2, dirt[1] - shape[1] / 2)
-    pos_score = adj_pos[0]**2 + adj_pos[1]**2
-    # if not pos_score:
-    #     pos_score = 1
-    # else:
-    #     pos_score = 1 / pos_score
-    cluster_score += len(get_dirt_at_distance(dirt, board, 1))
-    cluster_score += len(get_dirt_at_distance(dirt, board, 2))
-    cluster_score += len(get_dirt_at_distance(dirt, board, 3))
-    if not pos_score:
-        pos_score = 1
-    A = 1
-    B = -2
-    if not cluster_score:
-        cluster_score = 1
-    return cluster_score + A * (pos_score**(0.5 * B))
-    # return cluster_score + A * pos_score + c * distance
+    pos_score = (adj_pos[0]**2 + adj_pos[1]**2) / max_pos
+    n_dirt, n_squares = 0, 0
+    for d in range(1, CLUSTER_LENGTH + 1):
+        n_dirt += len(get_dirt_at_distance(dirt, board, d))
+        n_squares += 4 * d
+    cluster_score = n_dirt / n_squares
+    return -cluster_score + A * pos_score + B * pos_score**2 - C * distance_score - D * distance_score**2
 
 
 def next_move(pos, board):
@@ -73,10 +72,14 @@ def next_move(pos, board):
     if board[pos[0]][pos[1]] == DIRT:
         return "CLEAN"
     dirts = find_closest_dirts(pos, board)
+    d = dist(pos, dirts[0])
+    for i in range(d, d + DISTANCES_CONSIDERED + 1):
+        dirts.extend(get_dirt_at_distance(pos, board, i))
+        dirts.extend(get_dirt_at_distance(pos, board, i))
     best_dirt = None
-    best_score = 0
+    best_score = -999999999
     for dirt in dirts:
-        if not best_dirt or dirt_score(pos, dirt, board, shape) < best_score:
+        if dirt_score(pos, dirt, board, shape) > best_score:
             best_dirt = dirt
             best_score = dirt_score(pos, dirt, board, shape)
 

@@ -3,9 +3,7 @@
 # import main
 import numpy as np
 import sys
-import random
 import Strategies
-import pprint
 
 MOVES = {
     "RIGHT": np.array((0, 1)),
@@ -66,6 +64,7 @@ def generate_board():
 
 # def replay_game(starting_board, strats):
 
+
 def print_boards(boards):
     num_boards = len(boards)
     hor_border = "#" * (SHAPE[1] + 2)
@@ -79,6 +78,7 @@ def print_boards(boards):
             rows.append("#" + row_content + "#")
         print(" ".join(rows))
     print(hor_border)
+
 
 def test_all():
     modules = [module for module in dir(Strategies) if "__" not in module]
@@ -94,37 +94,44 @@ def test_all():
         pos, board = generate_board()
         for strat in strats:
             num_moves[strat.__name__].append(try_strategy(strat, pos, board))
-        if mov[0][-1] > worst_score:
-            worst_score = mov[0][-1]
+        # if mov[0][-1] > worst_score:
+        # worst_score = mov[0][-1]
+        # saved_board = [pos, board]
+        if mov[0][-1] - mov[1][-1] < biggest_diff:
+            biggest_diff = mov[0][-1] - mov[1][-1]
             saved_board = [pos, board]
-        # if mov[0][-1] - mov[1][-1] < biggest_diff:
-        #     biggest_diff = mov[0][-1] - mov[1][-1]
-        #     saved_board = [pos, board]
     replayed_games = []
-    for strat in strats:
-        replayed_games.append(
-            try_strategy(strat, saved_board[0], saved_board[1], debug=True))
+    if saved_board:
+        for strat in strats:
+            replayed_games.append(
+                try_strategy(strat, saved_board[0], saved_board[1],
+                             debug=True))
 
-    for strat in strats:
-        print(strat.__name__)
-    for g in range(min(len(replayed_games[0]), len(replayed_games[1]))):
-        boards = []
-        for game in replayed_games:
-            boards.append(game[g])
-        print_boards(boards)
+        for strat in strats:
+            print(strat.__name__)
+        for g in range(min(len(replayed_games[0]), len(replayed_games[1]))):
+            boards = []
+            for game in replayed_games:
+                boards.append(game[g])
+            print_boards(boards)
 
     print(f"Diff in this game was {biggest_diff}!")
     width = max([len(name) for name in num_moves.keys()])
     mov = list(num_moves.values())
     diffs = [mov[1][i] - mov[0][i] for i in range(num_tries)]
+    diffs.sort()
     avg = sum(diffs) / num_tries
     std = (sum(map(lambda x: (x - avg)**2, diffs)) / num_tries)**0.5
     diffs.sort()
     print(f"diffs{' ':<{width-5}}  {avg} +- {std/(num_tries**0.5):.3}")
     for strat, moves in num_moves.items():
+        moves.sort()
         avg = sum(moves) / num_tries
         std = (sum(map(lambda x: (x - avg)**2, moves)) / num_tries)**0.5
-        print(f"{strat:<{width}}  {avg} +- {std/(num_tries**0.5):.3}")
+        median = moves[len(moves) // 2]
+        print(
+            f"{strat:<{width}}  {avg} +- {std/(num_tries**0.5):.3},  median: {median}"
+        )
 
 
 def try_strategy(strat, orig_pos, orig_board, debug=False):

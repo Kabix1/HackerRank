@@ -53,7 +53,7 @@ def find_closest_dirts(pos, board, max_distance=0):
 
 def dirt_score(dirt, board, shape):
     adj_pos = (dirt[0] - shape[0] / 2, dirt[1] - shape[1] / 2)
-    pos_score = adj_pos[0] ** 2 + adj_pos[1] ** 2
+    pos_score = adj_pos[0]**2 + adj_pos[1]**2
     if not pos_score:
         pos_score = 1
     else:
@@ -67,7 +67,7 @@ def dirt_score(dirt, board, shape):
     return pos_score
 
 
-def next_move(pos, board):
+def _next_move(pos, board):
     shape = (len(board), len(board[0]))
     if board[pos[0]][pos[1]] == DIRT:
         return "CLEAN"
