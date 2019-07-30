@@ -2,10 +2,14 @@ BOT = "b"
 EMPTY = "-"
 DIRT = "d"
 
+# A = 0.2455475233408131
+# B = 0.15227
+# C = 3.981984996122549
+# D = 0
 A = 0.2455475233408131
 B = 0.15227
-C = 3.981984996122549
-D = 0
+# C = 3.981984996122549
+# D = 0
 CLUSTER_LENGTH = 3
 DISTANCES_CONSIDERED = 4
 
@@ -64,7 +68,7 @@ def dirt_score(pos, dirt, board, shape):
         n_dirt += len(get_dirt_at_distance(dirt, board, d))
         n_squares += 4 * d
     cluster_score = n_dirt / n_squares
-    return -cluster_score + A * pos_score + B * pos_score**2 - C * distance_score - D * distance_score**2
+    return -cluster_score + A * pos_score - B * distance_score
 
 
 def next_move(pos, board):
